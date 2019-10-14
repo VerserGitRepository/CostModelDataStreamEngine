@@ -14,48 +14,48 @@ namespace CostModelDataStream.CostModelEntities
         [StringLength(500)]
         public string CostCategory { get; set; }
 
-        [StringLength(50)]
-        public string CostPerUnit { get; set; }
+        //[StringLength(50)]
+        public decimal CostPerUnit { get; set; }
 
-        [StringLength(50)]
-        public string TravelCostPerUnit { get; set; }
+        //[StringLength(50)]
+        public decimal TravelCostPerUnit { get; set; }
 
-        [StringLength(50)]
-        public string LabourCostPerUnit { get; set; }
+        //[StringLength(50)]
+        public decimal LabourCostPerUnit { get; set; }
 
-        [StringLength(50)]
-        public string VariableCostPerUnit { get; set; }
+        //[StringLength(50)]
+        public decimal VariableCostPerUnit { get; set; }
 
-        [StringLength(50)]
-        public string PMCostPerUnit { get; set; }
+        //[StringLength(50)]
+        public decimal PMCostPerUnit { get; set; }
 
-        [StringLength(50)]
-        public string TechnicianHourlyRate { get; set; }
+        //[StringLength(50)]
+        public decimal TechnicianHourlyRate { get; set; }
 
-        [StringLength(50)]
-        public string TravelCostHoursPerunit { get; set; }
+        //[StringLength(50)]
+        public decimal TravelCostHoursPerunit { get; set; }
 
-        [StringLength(50)]
-        public string LabourCostHoursPerUnit { get; set; }
+        //[StringLength(50)]
+        public decimal LabourCostHoursPerUnit { get; set; }
 
-        [StringLength(50)]
-        public string PMCostHoursPerUnit { get; set; }
+        //[StringLength(50)]
+        public decimal PMCostHoursPerUnit { get; set; }
 
-        [StringLength(50)]
-        public string VariableCostPerUnitNA { get; set; }
+        //[StringLength(50)]
+        public decimal VariableCostPerUnitNA { get; set; }
 
-        [StringLength(50)]
-        public string TotalCost { get; set; }
+        //[StringLength(50)]
+        public decimal TotalCost { get; set; }
 
-        [StringLength(50)]
-        public string ProfitPerUnit { get; set; }
+        //[StringLength(50)]
+        public decimal ProfitPerUnit { get; set; }
 
-        [StringLength(50)]
-        public string TotalProfit { get; set; }
+        //[StringLength(50)]
+        public decimal TotalProfit { get; set; }
 
-        [StringLength(50)]
-        public string ActualMarginOnOverHead { get; set; }
+        //[StringLength(50)]
+        public decimal ActualMarginOnOverHead { get; set; }
 
-        public int OpportunityNumberID_FK { get; set; }
+        public int OpportunityNumberID { get; set; }
     }
 }

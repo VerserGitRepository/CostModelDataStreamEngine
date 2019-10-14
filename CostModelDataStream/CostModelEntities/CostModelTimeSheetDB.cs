@@ -62,76 +62,79 @@ namespace CostModelDataStream.CostModelEntities
 
             modelBuilder.Entity<ServiceCost>()
                 .Property(e => e.CostPerUnit)
-                .IsUnicode(false);
+                ;
 
             modelBuilder.Entity<ServiceCost>()
-                .Property(e => e.TravelCostPerUnit)
-                .IsUnicode(false);
+                .Property(e => e.TravelCostPerUnit);
+
 
             modelBuilder.Entity<ServiceCost>()
-                .Property(e => e.LabourCostPerUnit)
-                .IsUnicode(false);
+                .Property(e => e.LabourCostPerUnit);
+               
 
             modelBuilder.Entity<ServiceCost>()
-                .Property(e => e.VariableCostPerUnit)
-                .IsUnicode(false);
+                .Property(e => e.VariableCostPerUnit);
+               
 
             modelBuilder.Entity<ServiceCost>()
-                .Property(e => e.PMCostPerUnit)
-                .IsUnicode(false);
+                .Property(e => e.PMCostPerUnit);
+               
 
             modelBuilder.Entity<ServiceCost>()
-                .Property(e => e.TechnicianHourlyRate)
-                .IsUnicode(false);
+                .Property(e => e.TechnicianHourlyRate);
+               
 
             modelBuilder.Entity<ServiceCost>()
-                .Property(e => e.TravelCostHoursPerunit)
-                .IsUnicode(false);
+                .Property(e => e.TravelCostHoursPerunit);
+               
 
             modelBuilder.Entity<ServiceCost>()
-                .Property(e => e.LabourCostHoursPerUnit)
-                .IsUnicode(false);
+                .Property(e => e.LabourCostHoursPerUnit);
+               
 
             modelBuilder.Entity<ServiceCost>()
-                .Property(e => e.PMCostHoursPerUnit)
-                .IsUnicode(false);
+                .Property(e => e.PMCostHoursPerUnit);
+               
 
             modelBuilder.Entity<ServiceCost>()
-                .Property(e => e.VariableCostPerUnitNA)
-                .IsUnicode(false);
+                .Property(e => e.VariableCostPerUnitNA);
+               
 
             modelBuilder.Entity<ServiceCost>()
-                .Property(e => e.TotalCost)
-                .IsUnicode(false);
+                .Property(e => e.TotalCost);
+               
 
             modelBuilder.Entity<ServiceCost>()
-                .Property(e => e.ProfitPerUnit)
-                .IsUnicode(false);
+                .Property(e => e.ProfitPerUnit);
+               
 
             modelBuilder.Entity<ServiceCost>()
-                .Property(e => e.TotalProfit)
-                .IsUnicode(false);
+                .Property(e => e.TotalProfit);
+               
 
             modelBuilder.Entity<ServiceCost>()
-                .Property(e => e.ActualMarginOnOverHead)
-                .IsUnicode(false);
-          
+                .Property(e => e.ActualMarginOnOverHead);
+
+
 
             modelBuilder.Entity<ServiceRevenue>()
-                .Property(e => e.ServiceDescription)
-                .IsUnicode(false);
+                .Property(e => e.ServiceDescription);
+
+
 
             modelBuilder.Entity<ServiceRevenue>()
-                .Property(e => e.PricePerUnit)
-                .IsUnicode(false);
+                .Property(e => e.PricePerUnit);
+
+
 
             modelBuilder.Entity<ServiceRevenue>()
-                .Property(e => e.Quantity)
-                .IsUnicode(false);
+                .Property(e => e.Quantity);
+
+
 
             modelBuilder.Entity<ServiceRevenue>()
-                .Property(e => e.TotalPrice)
-                .IsUnicode(false);
+                .Property(e => e.TotalPrice);
+                
 
         }
     }

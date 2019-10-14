@@ -9,18 +9,21 @@ namespace CostModelDataStream.ServiceImplementations
 {
    public class ProjectService
     {
-        public static int CreateProject(string ProjectName)
+        public static int CreateProject(string ProjectName,int JMSProjectId)
         {
             int returnID = 0;
             using (CostModelTimeSheetDB db = new CostModelTimeSheetDB())
             {
-                var IsExist = db.Projects.Where(x => x.ProjectName == ProjectName).FirstOrDefault();
+                var IsExist = db.Projects.Where(x => x.ProjectName.Replace("-","").Replace("_","").Replace(" ","").ToLower() == ProjectName.Replace("-", "").Replace("_", "").Replace(" ", "").ToLower()).FirstOrDefault();
                 if (IsExist == null)
                 {
                     var add = new Projects()
                     {
+                        Created = DateTime.Now,
+//                        CreatedBy = "Kalyan Vedula"
                         ProjectName = ProjectName,
-                        IsActive = true
+                        IsActive = true,
+                        JMSProjectID = JMSProjectId
                     };
                     var Project = db.Projects.Add(add);
                     db.SaveChanges();

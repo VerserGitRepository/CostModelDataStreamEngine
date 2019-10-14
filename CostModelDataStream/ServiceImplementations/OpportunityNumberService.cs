@@ -9,7 +9,7 @@ namespace CostModelDataStream.ServiceImplementations
 {
    public  class OpportunityNumberService
     {
-        public static int CreateOpportunityNumber(string Opportunity, int ProjectId)
+        public static int CreateOpportunityNumber(int Opportunity, int ProjectId,int projectManagerId)
         {
             int returnID = 0;
             using (CostModelTimeSheetDB db = new CostModelTimeSheetDB())
@@ -21,6 +21,7 @@ namespace CostModelDataStream.ServiceImplementations
                     {
                         OpportunityNumber = Opportunity,
                         ProjectID= ProjectId,
+                        ProjectManagerID = projectManagerId,
                         IsActive = true
                     };
                     var Project = db.OpportunityNumbers.Add(add);

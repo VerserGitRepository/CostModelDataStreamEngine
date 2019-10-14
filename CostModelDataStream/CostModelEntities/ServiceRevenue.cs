@@ -14,14 +14,14 @@ namespace CostModelDataStream.CostModelEntities
         [StringLength(500)]
         public string ServiceDescription { get; set; }
 
-        [StringLength(50)]
-        public string PricePerUnit { get; set; }
+        //[StringLength(50)]
+        public decimal PricePerUnit { get; set; }
 
-        [StringLength(50)]
-        public string Quantity { get; set; }
+       // [StringLength(50)]
+        public int Quantity { get; set; }
 
-        [StringLength(50)]
-        public string TotalPrice { get; set; }
+       // [StringLength(50)]
+        public decimal TotalPrice { get; set; }
 
         public int OpportunityNumberID { get; set; }
         public int? ServiceActivityID { get; set; }

@@ -9,8 +9,9 @@ namespace CostModelDataStream.CostModelEntities
     public class OpportunityNumbers
     {
         public int Id { get; set; }
-        public string OpportunityNumber { get; set; }
+        public int? OpportunityNumber { get; set; }
         public int? ProjectID { get; set; }
+        public int? ProjectManagerID { get; set; }
         public DateTime Created { get; set; } = DateTime.Now;
         public bool? IsActive { get; set; }
         public DateTime? Updated { get; set; }
