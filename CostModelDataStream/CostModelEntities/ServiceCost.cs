@@ -57,5 +57,6 @@ namespace CostModelDataStream.CostModelEntities
         public decimal ActualMarginOnOverHead { get; set; }
 
         public int OpportunityNumberID { get; set; }
+        public int ServiceRevenueFK_ID { get; set; }
     }
 }

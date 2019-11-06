@@ -63,19 +63,19 @@ namespace CostModelDataStream.StreamEngine
                     AddServiceRevenue(xlRange, OpportunityNumberID, i);
                 }
 
-                xlWorksheet = xlWorkbook.Sheets["ServiceCost"];
-                xlRange = xlWorksheet.UsedRange;
+                //xlWorksheet = xlWorkbook.Sheets["ServiceCost"];
+                //xlRange = xlWorksheet.UsedRange;
 
-                rowCount = xlRange.Rows.Count;
+                //rowCount = xlRange.Rows.Count;
 
-                for (int i = 2; i <= rowCount; i++)
-                {
-                    if (xlRange.Cells[i, 8].Value2 == null)
-                    {
-                        break;
-                    }
-                    AddServiceCost(xlRange,  OpportunityNumberID, i);
-                }
+                //for (int i = 2; i <= rowCount; i++)
+                //{
+                //    if (xlRange.Cells[i, 8].Value2 == null)
+                //    {
+                //        break;
+                //    }
+                //    AddServiceCost(xlRange,  OpportunityNumberID, i);
+                //}
                 if (Returnvalidation.IsSuccess == true)
                 {
                     filesvalidate.AddNewFile(filename, OpportunityNumber);
@@ -153,8 +153,22 @@ namespace CostModelDataStream.StreamEngine
         }
         private static void AddServiceRevenue(Excel.Range xlRange,  int OpportunityNumberID, int i)
         {           
-                var ServiceDescription = xlRange.Cells[i, 1].Value2.ToString();
-                decimal PricePerUnit = 0.0M;
+            var ServiceDescription = xlRange.Cells[i, 1].Value2.ToString();
+            decimal PricePerUnit = 0.0M;
+            var _CostCategory = "";
+            decimal _CostPerUnit = 0.0M;
+            decimal _TravelCostPerUnit = 0.0M;
+            decimal _LabourCostPerUnit = 0.0M;
+            decimal _VariableCostPerUnit = 0.0M;
+            decimal _PMCostPerUnit = 0.0M;
+            decimal _TechnicianHourlyRate = 0.0M;
+            decimal _TravelCostHoursPerunit = 0.0M;
+            decimal _LabourCostHoursPerUnit = 0.0M;
+            decimal _VariableCostPerUnitNA = 0.0M;
+            decimal _PMCostHoursPerUnit = 0.0M;
+            decimal _TotalCost = 0.0M;
+            decimal _ProfitPerUnit = 0.0M;
+            decimal _TotalProfit = 0.0M;
             try
             {
                 decimal.TryParse(xlRange.Cells[i, 2].Value2.ToString(), out PricePerUnit);
@@ -182,6 +196,194 @@ namespace CostModelDataStream.StreamEngine
                 TotalPrice = 0.0M;
             }
 
+            //service cost merge
+            if (xlRange.Cells[i, 5].Value2 != null)
+            {
+                _CostCategory = xlRange.Cells[i, 5].Value2.ToString() ?? null;
+            }
+            if (xlRange.Cells[i, 6].Value2 != null)
+            {
+
+                try
+                {
+                    _CostPerUnit = decimal.Parse(xlRange.Cells[i, 6].Value2.ToString().Replace("$", "").Trim()) ?? null;
+                    _CostPerUnit = decimal.Parse(_CostPerUnit.ToString().Replace("$", "").Trim());
+                    _CostPerUnit = Math.Round(_CostPerUnit, 2, MidpointRounding.ToEven);
+                }
+                catch (Exception ex)
+                {
+                    _CostPerUnit = 0.0M;
+                }
+            }
+            if (xlRange.Cells[i, 7].Value2 != null)
+            {
+
+                try
+                {
+                    _TravelCostPerUnit = decimal.Parse(xlRange.Cells[i, 7].Value2.ToString().Replace("$", "").Trim()) ?? null;
+                    _TravelCostPerUnit = decimal.Parse(_TravelCostPerUnit.ToString().Replace("$", "").Trim());
+                    _TravelCostPerUnit = Math.Round(_TravelCostPerUnit, 2, MidpointRounding.ToEven);
+                }
+                catch (Exception ex)
+                {
+                    _TravelCostPerUnit = 0.0M;
+                }
+            }
+            if (xlRange.Cells[i, 8].Value2 != null)
+            {
+
+                try
+                {
+                    _LabourCostPerUnit = decimal.Parse(xlRange.Cells[i, 8].Value2.ToString().Replace("$", "").Trim()) ?? null;
+                    _LabourCostPerUnit = decimal.Parse(_LabourCostPerUnit.ToString().Replace("$", "").Trim());
+                    _LabourCostPerUnit = Math.Round(_LabourCostPerUnit, 2, MidpointRounding.ToEven);
+                }
+                catch (Exception ex)
+                {
+                    _LabourCostPerUnit = 0.0M;
+                }
+            }
+            if (xlRange.Cells[i, 9].Value2 != null)
+            {
+
+                try
+                {
+                    _VariableCostPerUnit = decimal.Parse(xlRange.Cells[i, 9].Value2.ToString().Replace("$", "").Trim()) ?? null;
+                    _VariableCostPerUnit = decimal.Parse(_VariableCostPerUnit.ToString().Replace("$", "").Trim());
+                    _VariableCostPerUnit = Math.Round(_VariableCostPerUnit, 2, MidpointRounding.ToEven);
+                }
+                catch (Exception ex)
+                {
+                    _VariableCostPerUnit = 0.0M;
+                }
+            }
+            if (xlRange.Cells[i, 10].Value2 != null)
+            {
+
+                try
+                {
+                    _PMCostPerUnit = decimal.Parse(xlRange.Cells[i, 10].Value2.ToString().Replace("$", "").Trim()) ?? null;
+                    _PMCostPerUnit = decimal.Parse(_PMCostPerUnit.ToString().Replace("$", "").Trim());
+                    _PMCostPerUnit = Math.Round(_PMCostPerUnit, 2, MidpointRounding.ToEven);
+                }
+                catch (Exception ex)
+                {
+                    _PMCostPerUnit = 0.0M;
+                }
+            }
+            if (xlRange.Cells[i, 11].Value2 != null)
+            {
+
+                try
+                {
+                    _TechnicianHourlyRate = decimal.Parse(xlRange.Cells[i, 11].Value2.ToString().Replace("$", "").Trim()) ?? null;
+                    _TechnicianHourlyRate = decimal.Parse(_TechnicianHourlyRate.ToString().Replace("$", "").Trim());
+                    _TechnicianHourlyRate = Math.Round(_TechnicianHourlyRate, 2, MidpointRounding.ToEven);
+                }
+                catch (Exception ex)
+                {
+                    _TechnicianHourlyRate = 0.0M;
+                }
+            }
+            if (xlRange.Cells[i, 12].Value2 != null)
+            {
+
+                try
+                {
+                    _TravelCostHoursPerunit = decimal.Parse(xlRange.Cells[i, 12].Value2.ToString().Replace("$", "").Trim()) ?? null;
+                    _TravelCostHoursPerunit = decimal.Parse(_TravelCostHoursPerunit.ToString().Replace("$", "").Trim());
+                    _TravelCostHoursPerunit = Math.Round(_TravelCostHoursPerunit, 2, MidpointRounding.ToEven);
+                }
+                catch (Exception ex)
+                {
+                    _TravelCostHoursPerunit = 0.0M;
+                }
+            }
+            if (xlRange.Cells[i, 13].Value2 != null)
+            {
+
+                try
+                {
+                    _LabourCostHoursPerUnit = decimal.Parse(xlRange.Cells[i, 13].Value2.ToString().Replace("$", "").Trim()) ?? null;
+                    _LabourCostHoursPerUnit = decimal.Parse(_LabourCostHoursPerUnit.ToString().Replace("$", "").Trim());
+                    _LabourCostHoursPerUnit = Math.Round(_LabourCostHoursPerUnit, 2, MidpointRounding.ToEven);
+                }
+                catch (Exception ex)
+                {
+                    _LabourCostHoursPerUnit = 0.0M;
+                }
+            }
+            if (xlRange.Cells[i, 14].Value2 != null)
+            {
+
+                try
+                {
+                    _VariableCostPerUnitNA = decimal.Parse(xlRange.Cells[i, 14].Value2.ToString().Replace("$", "").Trim()) ?? null;
+                    _VariableCostPerUnitNA = decimal.Parse(_VariableCostPerUnitNA.ToString().Replace("$", "").Trim());
+                    _VariableCostPerUnitNA = Math.Round(_VariableCostPerUnitNA, 2, MidpointRounding.ToEven);
+                }
+                catch (Exception ex)
+                {
+                    _VariableCostPerUnitNA = 0.0M;
+                }
+            }
+            if (xlRange.Cells[i, 15].Value2 != null)
+            {
+
+                try
+                {
+                    _PMCostHoursPerUnit = decimal.Parse(xlRange.Cells[i, 15].Value2.ToString().Replace("$", "").Trim()) ?? null;
+                    _PMCostHoursPerUnit = decimal.Parse(_PMCostHoursPerUnit.ToString().Replace("$", "").Trim());
+                    _PMCostHoursPerUnit = Math.Round(_PMCostHoursPerUnit, 2, MidpointRounding.ToEven);
+                }
+                catch (Exception ex)
+                {
+                    _PMCostHoursPerUnit = 0.0M;
+                }
+            }
+            if (xlRange.Cells[i, 16].Value2 != null)
+            {
+
+                try
+                {
+                    _TotalCost = decimal.Parse(xlRange.Cells[i, 16].Value2.ToString().Replace("$", "").Trim()) ?? null;
+                    _TotalCost = decimal.Parse(_TotalCost.ToString().Replace("$", "").Trim());
+                    _TotalCost = Math.Round(_TotalCost, 2, MidpointRounding.ToEven);
+                }
+                catch (Exception ex)
+                {
+                    _TotalCost = 0.0M;
+                }
+            }
+            if (xlRange.Cells[i, 17].Value2 != null)
+            {
+
+                try
+                {
+                    _ProfitPerUnit = decimal.Parse(xlRange.Cells[i, 17].Value2.ToString().Replace("$", "").Trim()) ?? null;
+                    _ProfitPerUnit = decimal.Parse(_ProfitPerUnit.ToString().Replace("$", "").Trim());
+                    _ProfitPerUnit = Math.Round(_ProfitPerUnit, 2, MidpointRounding.ToEven);
+                }
+                catch (Exception ex)
+                {
+                    _ProfitPerUnit = 0.0M;
+                }
+            }
+            if (xlRange.Cells[i, 18].Value2 != null)
+            {
+
+                try
+                {
+                    _TotalProfit = decimal.Parse(xlRange.Cells[i, 18].Value2.ToString().Replace("$", "").Trim()) ?? null;
+                    _TotalProfit = decimal.Parse(_TotalProfit.ToString().Replace("$", "").Trim());
+                    _TotalProfit = Math.Round(_TotalProfit, 2, MidpointRounding.ToEven);
+                }
+                catch (Exception ex)
+                {
+                    _TotalProfit = 0.0M;
+                }
+            }
+
             int ServiceActivitiesID= ServiceActivityHelperService.CreateServiceActivity(ServiceDescription);
 
                 ServiceRevenue s = new ServiceRevenue()
@@ -191,219 +393,7 @@ namespace CostModelDataStream.StreamEngine
                     Quantity = Quantity,
                     TotalPrice = TotalPrice,
                     ServiceActivityID = ServiceActivitiesID,
-                    OpportunityNumberID = OpportunityNumberID
-                };
-                ServiceRevenueService servicerevenue = new ServiceRevenueService();
-                servicerevenue.CreateServiceCost(s);
-           
-        }
-        private static void AddServiceCost(Excel.Range xlRange, int OpportunityNumberID, int i)
-        {
-            var _CostCategory = "";
-            decimal _CostPerUnit = 0.0M;
-            decimal _TravelCostPerUnit = 0.0M;
-            decimal _LabourCostPerUnit = 0.0M;
-            decimal _VariableCostPerUnit = 0.0M;
-            decimal _PMCostPerUnit = 0.0M;
-            decimal _TechnicianHourlyRate = 0.0M;
-            decimal _TravelCostHoursPerunit = 0.0M;
-            decimal _LabourCostHoursPerUnit = 0.0M;
-            decimal _VariableCostPerUnitNA = 0.0M;
-            decimal _PMCostHoursPerUnit = 0.0M;
-            decimal _TotalCost = 0.0M;
-            decimal _ProfitPerUnit = 0.0M;
-            decimal _TotalProfit = 0.0M;
-
-            if (xlRange.Cells[i, 1].Value2 != null)
-            {
-                 _CostCategory = xlRange.Cells[i, 1].Value2.ToString() ?? null;
-            }
-            if (xlRange.Cells[i, 2].Value2 != null)
-            {
-                 
-                try
-                {
-                    _CostPerUnit = decimal.Parse(xlRange.Cells[i, 2].Value2.ToString().Replace("$", "").Trim()) ?? null;
-                    _CostPerUnit = decimal.Parse(_CostPerUnit.ToString().Replace("$", "").Trim());
-                    _CostPerUnit = Math.Round(_CostPerUnit, 2, MidpointRounding.ToEven);
-                }
-                catch (Exception ex)
-                {
-                    _CostPerUnit = 0.0M;
-                }
-            }
-            if (xlRange.Cells[i, 3].Value2 != null)
-            {
-                
-                try
-                {
-                    _TravelCostPerUnit = decimal.Parse(xlRange.Cells[i, 3].Value2.ToString().Replace("$", "").Trim()) ?? null;
-                    _TravelCostPerUnit = decimal.Parse(_TravelCostPerUnit.ToString().Replace("$", "").Trim());
-                    _TravelCostPerUnit = Math.Round(_TravelCostPerUnit, 2, MidpointRounding.ToEven);
-                }
-                catch (Exception ex)
-                {
-                    _TravelCostPerUnit = 0.0M;
-                }
-            }
-            if (xlRange.Cells[i, 4].Value2 != null)
-            {
-                 
-                try
-                {
-                    _LabourCostPerUnit = decimal.Parse(xlRange.Cells[i, 4].Value2.ToString().Replace("$", "").Trim()) ?? null;
-                    _LabourCostPerUnit = decimal.Parse(_LabourCostPerUnit.ToString().Replace("$", "").Trim());
-                    _LabourCostPerUnit = Math.Round(_LabourCostPerUnit, 2, MidpointRounding.ToEven);
-                }
-                catch (Exception ex)
-                {
-                    _LabourCostPerUnit = 0.0M;
-                }
-            }
-            if (xlRange.Cells[i, 5].Value2 != null)
-            {
-                
-                try
-                {
-                    _VariableCostPerUnit = decimal.Parse(xlRange.Cells[i, 5].Value2.ToString().Replace("$", "").Trim()) ?? null;
-                    _VariableCostPerUnit = decimal.Parse(_VariableCostPerUnit.ToString().Replace("$", "").Trim());
-                    _VariableCostPerUnit = Math.Round(_VariableCostPerUnit, 2, MidpointRounding.ToEven);
-                }
-                catch (Exception ex)
-                {
-                    _VariableCostPerUnit = 0.0M;
-                }
-            }
-            if (xlRange.Cells[i, 6].Value2 != null)
-            {
-                 
-                try
-                {
-                    _PMCostPerUnit = decimal.Parse(xlRange.Cells[i, 6].Value2.ToString().Replace("$", "").Trim()) ?? null;
-                    _PMCostPerUnit = decimal.Parse(_PMCostPerUnit.ToString().Replace("$", "").Trim());
-                    _PMCostPerUnit = Math.Round(_PMCostPerUnit, 2, MidpointRounding.ToEven);
-                }
-                catch (Exception ex)
-                {
-                    _PMCostPerUnit = 0.0M;
-                }
-            }
-            if (xlRange.Cells[i, 7].Value2 != null)
-            {
-                 
-                try
-                {
-                    _TechnicianHourlyRate = decimal.Parse(xlRange.Cells[i, 7].Value2.ToString().Replace("$", "").Trim()) ?? null;
-                    _TechnicianHourlyRate = decimal.Parse(_TechnicianHourlyRate.ToString().Replace("$", "").Trim());
-                    _TechnicianHourlyRate = Math.Round(_TechnicianHourlyRate, 2, MidpointRounding.ToEven);
-                }
-                catch (Exception ex)
-                {
-                    _TechnicianHourlyRate = 0.0M;
-                }
-            }
-            if (xlRange.Cells[i, 8].Value2 != null)
-            {
-                 
-                try
-                {
-                    _TravelCostHoursPerunit = decimal.Parse(xlRange.Cells[i, 8].Value2.ToString().Replace("$", "").Trim()) ?? null;
-                    _TravelCostHoursPerunit = decimal.Parse(_TravelCostHoursPerunit.ToString().Replace("$", "").Trim());
-                    _TravelCostHoursPerunit = Math.Round(_TravelCostHoursPerunit, 2, MidpointRounding.ToEven);
-                }
-                catch (Exception ex)
-                {
-                    _TravelCostHoursPerunit = 0.0M;
-                }
-            }
-            if (xlRange.Cells[i, 9].Value2 != null)
-            {
-                 
-                try
-                {
-                    _LabourCostHoursPerUnit = decimal.Parse(xlRange.Cells[i, 9].Value2.ToString().Replace("$", "").Trim()) ?? null;
-                    _LabourCostHoursPerUnit = decimal.Parse(_LabourCostHoursPerUnit.ToString().Replace("$", "").Trim());
-                    _LabourCostHoursPerUnit = Math.Round(_LabourCostHoursPerUnit, 2, MidpointRounding.ToEven);
-                }
-                catch (Exception ex)
-                {
-                    _LabourCostHoursPerUnit = 0.0M;
-                }
-            }
-            if (xlRange.Cells[i, 10].Value2 != null)
-            {
-                
-                try
-                {
-                    _VariableCostPerUnitNA = decimal.Parse(xlRange.Cells[i, 10].Value2.ToString().Replace("$", "").Trim()) ?? null;
-                    _VariableCostPerUnitNA = decimal.Parse(_VariableCostPerUnitNA.ToString().Replace("$", "").Trim());
-                    _VariableCostPerUnitNA = Math.Round(_VariableCostPerUnitNA, 2, MidpointRounding.ToEven);
-                }
-                catch (Exception ex)
-                {
-                    _VariableCostPerUnitNA = 0.0M;
-                }
-            }
-            if (xlRange.Cells[i, 11].Value2 != null)
-            {
-                 
-                try
-                {
-                    _PMCostHoursPerUnit = decimal.Parse(xlRange.Cells[i, 11].Value2.ToString().Replace("$", "").Trim()) ?? null;
-                    _PMCostHoursPerUnit = decimal.Parse(_PMCostHoursPerUnit.ToString().Replace("$", "").Trim());
-                    _PMCostHoursPerUnit = Math.Round(_PMCostHoursPerUnit, 2, MidpointRounding.ToEven);
-                }
-                catch (Exception ex)
-                {
-                    _PMCostHoursPerUnit = 0.0M;
-                }
-            }
-            if (xlRange.Cells[i, 12].Value2 != null)
-            {
-                 
-                try
-                {
-                    _TotalCost = decimal.Parse(xlRange.Cells[i, 12].Value2.ToString().Replace("$", "").Trim()) ?? null;
-                    _TotalCost = decimal.Parse(_TotalCost.ToString().Replace("$", "").Trim());
-                    _TotalCost = Math.Round(_TotalCost, 2, MidpointRounding.ToEven);
-                }
-                catch (Exception ex)
-                {
-                    _TotalCost = 0.0M;
-                }
-            }
-            if (xlRange.Cells[i, 13].Value2 != null)
-            {
-                 
-                try
-                {
-                    _ProfitPerUnit = decimal.Parse(xlRange.Cells[i, 13].Value2.ToString().Replace("$", "").Trim()) ?? null;
-                    _ProfitPerUnit = decimal.Parse(_ProfitPerUnit.ToString().Replace("$", "").Trim());
-                    _ProfitPerUnit = Math.Round(_ProfitPerUnit, 2, MidpointRounding.ToEven);
-                }
-                catch (Exception ex)
-                {
-                    _ProfitPerUnit = 0.0M;
-                }
-            }
-            if (xlRange.Cells[i, 14].Value2 != null)
-            {
-                 
-                try
-                {
-                    _TotalProfit = decimal.Parse(xlRange.Cells[i, 14].Value2.ToString().Replace("$", "").Trim()) ?? null;
-                    _TotalProfit = decimal.Parse(_TotalProfit.ToString().Replace("$", "").Trim());
-                    _TotalProfit = Math.Round(_TotalProfit, 2, MidpointRounding.ToEven);
-                }
-                catch (Exception ex)
-                {
-                    _TotalProfit = 0.0M;
-                }
-            }
-               //string _ActualMarginOnOverHead = xlRange.Cells[i, 20].Value2.ToString() ?? null;
-
-                ServiceCost c = new ServiceCost()
-                {
+                    OpportunityNumberID = OpportunityNumberID,
                     CostCategory = _CostCategory,
                     CostPerUnit = _CostPerUnit,
                     TravelCostPerUnit = _TravelCostPerUnit,
@@ -418,12 +408,27 @@ namespace CostModelDataStream.StreamEngine
                     TotalCost = _TotalCost,
                     ProfitPerUnit = _ProfitPerUnit,
                     TotalProfit = _TotalProfit,
-                    //ActualMarginOnOverHead = _ActualMarginOnOverHead,
-                    OpportunityNumberID = OpportunityNumberID
-                };
-                ServiceCostService costservice = new ServiceCostService();
-                costservice.CreateServiceCost(c);           
+                   // ActualMarginOnOverHead = _ActualMarginOnOverHead,
                     
+                };
+                ServiceRevenueService servicerevenue = new ServiceRevenueService();
+                servicerevenue.CreateServiceCost(s);
+           
+        }
+        private static void AddServiceCost(Excel.Range xlRange, int OpportunityNumberID, int i)
+        {
+
+
+
+            string _ActualMarginOnOverHead = xlRange.Cells[i, 20].Value2.ToString() ?? null;
+
+            ServiceCost c = new ServiceCost()
+            {
+
+            };
+            ServiceCostService costservice = new ServiceCostService();
+            costservice.CreateServiceCost(c);
+
         }
         public static void ReleaseFile(Excel.Range xlRange, Excel._Worksheet xlWorksheet, Excel.Workbook xlWorkbook, Excel.Application xlApp)
         {
