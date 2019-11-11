@@ -21,15 +21,13 @@ namespace CostModelDataStream.ServiceImplementations
             using (CostModelTimeSheetDB db = new CostModelTimeSheetDB())
             {
                 var IsExist = db.ServiceRevenues.Where(x => x.ServiceDescription == servicerevenueData.ServiceDescription).FirstOrDefault();
-                if (IsExist == null)
+                if (IsExist != null)
                 {
-                    db.ServiceRevenues.Add(servicerevenueData);
-                    db.SaveChanges();
+                    servicerevenueData.ServiceActivityID = IsExist.Id;
                 }
-                else
-                {
-                    returnID = IsExist.Id;
-                }
+                db.ServiceRevenues.Add(servicerevenueData);
+                db.SaveChanges();
+
             }
            // return returnID;
         }

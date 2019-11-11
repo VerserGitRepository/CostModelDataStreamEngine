@@ -6,6 +6,8 @@ using System.IO;
 using System.Runtime.InteropServices;
 using Excel = Microsoft.Office.Interop.Excel;
 using CostModelDataStream.Logger;
+using System.Data.SqlClient;
+using Microsoft.Office.Interop.Excel;
 
 namespace CostModelDataStream.StreamEngine
 {
@@ -36,10 +38,10 @@ namespace CostModelDataStream.StreamEngine
                 }
                 Excel.Application xlApp = new Excel.Application();
                 Excel.Workbook xlWorkbook = xlApp.Workbooks.Open(filename);
-                Excel._Worksheet xlWorksheet = xlWorkbook.Sheets["ProjectDetails"];  
+                Excel._Worksheet xlWorksheet = xlWorkbook.Sheets["Project Details"];  
                 Excel.Range xlRange = xlWorksheet.UsedRange;
                 Logger.Logger.Info("Adding the opportunity number.");
-                string OpportunityNumber = xlRange.Cells[2, 2].Value2.ToString();
+                string OpportunityNumber = xlRange.Cells[3, 2].Value2.ToString();
                 Logger.Logger.Info("The opportunity number is "+OpportunityNumber);
                 var Returnvalidation = AddProject(xlRange, OpportunityNumber);
 
@@ -48,14 +50,24 @@ namespace CostModelDataStream.StreamEngine
                     Environment.Exit(0);
                 }
                 int OpportunityNumberID = Returnvalidation.OpportunityNumberID;
-                xlWorksheet = xlWorkbook.Sheets["ServiceRevenue"];
+                xlWorksheet = xlWorkbook.Sheets["Pricing summary"];
                 xlRange = xlWorksheet.UsedRange;
 
-                int rowCount = xlRange.Rows.Count;
+                Range cells = xlRange.Worksheet.Cells;
+                bool ishdn = true;
 
-                for (int i = 2; i <= rowCount; i++)
+                int rowCount = xlRange.Rows.Count;
+                string checkStop = "";
+                for (int i = 7; i <= rowCount; i++)
                 {
-                    if (xlRange.Cells[i, 2].Value2 == null)
+                    ishdn = cells.Rows[i].Hidden;
+                    if (cells.Rows[i].Hidden)
+                    {
+                        continue;
+                    }
+                    checkStop = xlRange.Cells[i, 6].Value2; 
+
+                    if (checkStop != null && checkStop == "END")
                     {
                         break;
                     }
@@ -63,19 +75,7 @@ namespace CostModelDataStream.StreamEngine
                     AddServiceRevenue(xlRange, OpportunityNumberID, i);
                 }
 
-                //xlWorksheet = xlWorkbook.Sheets["ServiceCost"];
-                //xlRange = xlWorksheet.UsedRange;
-
-                //rowCount = xlRange.Rows.Count;
-
-                //for (int i = 2; i <= rowCount; i++)
-                //{
-                //    if (xlRange.Cells[i, 8].Value2 == null)
-                //    {
-                //        break;
-                //    }
-                //    AddServiceCost(xlRange,  OpportunityNumberID, i);
-                //}
+                
                 if (Returnvalidation.IsSuccess == true)
                 {
                     filesvalidate.AddNewFile(filename, OpportunityNumber);
@@ -91,21 +91,44 @@ namespace CostModelDataStream.StreamEngine
                 Marshal.ReleaseComObject(xlApp);
             }
         }
+        private static int GetJMSProjectId(string ProjectName)
+        {
+            string connString = ConfigurationSettings.AppSettings["JMS"].Trim();
+
+            string sql = "select id from Projects where LTRIM(RTRIM(lower(summary))) like('%" + ProjectName.ToLower().Trim() + "%')";
+            int newProdID = 0;
+            using (SqlConnection conn = new SqlConnection(connString))
+            {
+                SqlCommand cmd = new SqlCommand(sql, conn);
+                
+                try
+                {
+                    conn.Open();
+                    newProdID = (Int32)cmd.ExecuteScalar();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+            }
+            return (int)newProdID;
+        }
         private static ReturnEntityModel AddProject(Excel.Range xlRange, string OpportunityNumber)
         {
             Logger.Logger.Info("Inside method AddProject");
 
             ReturnEntityModel ReturnValues;
             Logger.Logger.Info("Reading values.");
-            var Customer = xlRange.Cells[2, 1].Value2.ToString() ?? null;
+            var Customer = xlRange.Cells[2, 2].Value2.ToString() ?? null;
+            var projectName = xlRange.Cells[8, 2].Value2.ToString() ?? null;
             Logger.Logger.Info("customer values."+ Customer);
-            var SiteAddress = xlRange.Cells[2, 3].Value2.ToString() ?? null;
+            var SiteAddress = xlRange.Cells[4, 2].Value2.ToString() ?? null;
                // var CustomerContactName = xlRange.Cells[2, 2].Value2.ToString() ?? null;
-                var VerserBranch = xlRange.Cells[2, 7].Value2.ToString() ?? null;
-                var SalesManager = xlRange.Cells[2, 8].Value2.ToString() ?? null;
-                var ProjectManager = xlRange.Cells[2, 9].Value2 ?? null;
-                var Approver = xlRange.Cells[2, 6].Value2.ToString() ?? null;
-                int JMSProjectId = int.Parse(xlRange.Cells[2, 10].Value2.ToString()) ?? null;
+                var VerserBranch = xlRange.Cells[5, 5].Value2.ToString() ?? null;
+                var SalesManager = xlRange.Cells[6, 5].Value2.ToString() ?? null;
+                var ProjectManager = xlRange.Cells[7, 5].Value2 ?? null;
+                var Approver = xlRange.Cells[4, 5].Value2.ToString() ?? null;
+            int JMSProjectId = GetJMSProjectId(xlRange.Cells[8, 2].Value2.ToString());
 
             //create Project Manager, Opp,Project if not exist
             int projectmanagerID = ProjectManagerService.CreateProjectManager(ProjectManager);
@@ -113,7 +136,7 @@ namespace CostModelDataStream.StreamEngine
             int OpportunityNumberID = 0;           
             if (projectmanagerID >0)
             {
-                projectID = ProjectService.CreateProject(Customer, JMSProjectId);
+                projectID = ProjectService.CreateProject(projectName, JMSProjectId);
             }
             if (projectID >0)
             {
@@ -134,7 +157,7 @@ namespace CostModelDataStream.StreamEngine
                 };
                 if (xlRange.Cells[2, 5].Value.ToString() != null)
                 {
-                    DateTime StartDate = Convert.ToDateTime(xlRange.Cells[2, 4].Value.ToString());
+                    DateTime StartDate = Convert.ToDateTime(xlRange.Cells[2, 5].Value.ToString());
                     project.StartDate = StartDate;
                 }
                 //if (xlRange.Cells[3, 5].Value.ToString() != null)
@@ -152,7 +175,10 @@ namespace CostModelDataStream.StreamEngine
                        
         }
         private static void AddServiceRevenue(Excel.Range xlRange,  int OpportunityNumberID, int i)
-        {           
+        {
+            
+            
+
             var ServiceDescription = xlRange.Cells[i, 1].Value2.ToString();
             decimal PricePerUnit = 0.0M;
             var _CostCategory = "";
@@ -171,7 +197,10 @@ namespace CostModelDataStream.StreamEngine
             decimal _TotalProfit = 0.0M;
             try
             {
-                decimal.TryParse(xlRange.Cells[i, 2].Value2.ToString(), out PricePerUnit);
+                PricePerUnit = decimal.Parse(xlRange.Cells[i, 2].Value2.ToString().Replace("$", "").Trim()) ?? null;
+                PricePerUnit = decimal.Parse(PricePerUnit.ToString().Replace("$", "").Trim());
+                PricePerUnit = Math.Round(PricePerUnit, 2, MidpointRounding.ToEven);
+               
             }
             catch (Exception ex)
             {
@@ -189,7 +218,11 @@ namespace CostModelDataStream.StreamEngine
                 decimal TotalPrice = 0;
             try
             {
-                decimal.TryParse(xlRange.Cells[i, 4].Value2.ToString(), out TotalPrice);
+                
+                TotalPrice = decimal.Parse(xlRange.Cells[i, 4].Value2.ToString().Replace("$", "").Trim()) ?? null;
+                TotalPrice = decimal.Parse(TotalPrice.ToString().Replace("$", "").Trim());
+                TotalPrice = Math.Round(TotalPrice, 2, MidpointRounding.ToEven);
+
             }
             catch (Exception ex)
             {
@@ -197,16 +230,16 @@ namespace CostModelDataStream.StreamEngine
             }
 
             //service cost merge
-            if (xlRange.Cells[i, 5].Value2 != null)
-            {
-                _CostCategory = xlRange.Cells[i, 5].Value2.ToString() ?? null;
-            }
             if (xlRange.Cells[i, 6].Value2 != null)
+            {
+                _CostCategory = xlRange.Cells[i, 6].Value2.ToString() ?? null;
+            }
+            if (xlRange.Cells[i, 7].Value2 != null)
             {
 
                 try
                 {
-                    _CostPerUnit = decimal.Parse(xlRange.Cells[i, 6].Value2.ToString().Replace("$", "").Trim()) ?? null;
+                    _CostPerUnit = decimal.Parse(xlRange.Cells[i, 7].Value2.ToString().Replace("$", "").Trim()) ?? null;
                     _CostPerUnit = decimal.Parse(_CostPerUnit.ToString().Replace("$", "").Trim());
                     _CostPerUnit = Math.Round(_CostPerUnit, 2, MidpointRounding.ToEven);
                 }
@@ -215,12 +248,12 @@ namespace CostModelDataStream.StreamEngine
                     _CostPerUnit = 0.0M;
                 }
             }
-            if (xlRange.Cells[i, 7].Value2 != null)
+            if (xlRange.Cells[i, 8].Value2 != null)
             {
 
                 try
                 {
-                    _TravelCostPerUnit = decimal.Parse(xlRange.Cells[i, 7].Value2.ToString().Replace("$", "").Trim()) ?? null;
+                    _TravelCostPerUnit = decimal.Parse(xlRange.Cells[i, 8].Value2.ToString().Replace("$", "").Trim()) ?? null;
                     _TravelCostPerUnit = decimal.Parse(_TravelCostPerUnit.ToString().Replace("$", "").Trim());
                     _TravelCostPerUnit = Math.Round(_TravelCostPerUnit, 2, MidpointRounding.ToEven);
                 }
@@ -229,12 +262,12 @@ namespace CostModelDataStream.StreamEngine
                     _TravelCostPerUnit = 0.0M;
                 }
             }
-            if (xlRange.Cells[i, 8].Value2 != null)
+            if (xlRange.Cells[i, 9].Value2 != null)
             {
 
                 try
                 {
-                    _LabourCostPerUnit = decimal.Parse(xlRange.Cells[i, 8].Value2.ToString().Replace("$", "").Trim()) ?? null;
+                    _LabourCostPerUnit = decimal.Parse(xlRange.Cells[i, 9].Value2.ToString().Replace("$", "").Trim()) ?? null;
                     _LabourCostPerUnit = decimal.Parse(_LabourCostPerUnit.ToString().Replace("$", "").Trim());
                     _LabourCostPerUnit = Math.Round(_LabourCostPerUnit, 2, MidpointRounding.ToEven);
                 }
@@ -243,12 +276,12 @@ namespace CostModelDataStream.StreamEngine
                     _LabourCostPerUnit = 0.0M;
                 }
             }
-            if (xlRange.Cells[i, 9].Value2 != null)
+            if (xlRange.Cells[i, 10].Value2 != null)
             {
 
                 try
                 {
-                    _VariableCostPerUnit = decimal.Parse(xlRange.Cells[i, 9].Value2.ToString().Replace("$", "").Trim()) ?? null;
+                    _VariableCostPerUnit = decimal.Parse(xlRange.Cells[i, 10].Value2.ToString().Replace("$", "").Trim()) ?? null;
                     _VariableCostPerUnit = decimal.Parse(_VariableCostPerUnit.ToString().Replace("$", "").Trim());
                     _VariableCostPerUnit = Math.Round(_VariableCostPerUnit, 2, MidpointRounding.ToEven);
                 }
@@ -257,12 +290,12 @@ namespace CostModelDataStream.StreamEngine
                     _VariableCostPerUnit = 0.0M;
                 }
             }
-            if (xlRange.Cells[i, 10].Value2 != null)
+            if (xlRange.Cells[i, 11].Value2 != null)
             {
 
                 try
                 {
-                    _PMCostPerUnit = decimal.Parse(xlRange.Cells[i, 10].Value2.ToString().Replace("$", "").Trim()) ?? null;
+                    _PMCostPerUnit = decimal.Parse(xlRange.Cells[i, 11].Value2.ToString().Replace("$", "").Trim()) ?? null;
                     _PMCostPerUnit = decimal.Parse(_PMCostPerUnit.ToString().Replace("$", "").Trim());
                     _PMCostPerUnit = Math.Round(_PMCostPerUnit, 2, MidpointRounding.ToEven);
                 }
@@ -271,12 +304,12 @@ namespace CostModelDataStream.StreamEngine
                     _PMCostPerUnit = 0.0M;
                 }
             }
-            if (xlRange.Cells[i, 11].Value2 != null)
+            if (xlRange.Cells[i, 12].Value2 != null)
             {
 
                 try
                 {
-                    _TechnicianHourlyRate = decimal.Parse(xlRange.Cells[i, 11].Value2.ToString().Replace("$", "").Trim()) ?? null;
+                    _TechnicianHourlyRate = decimal.Parse(xlRange.Cells[i, 12].Value2.ToString().Replace("$", "").Trim()) ?? null;
                     _TechnicianHourlyRate = decimal.Parse(_TechnicianHourlyRate.ToString().Replace("$", "").Trim());
                     _TechnicianHourlyRate = Math.Round(_TechnicianHourlyRate, 2, MidpointRounding.ToEven);
                 }
@@ -285,12 +318,12 @@ namespace CostModelDataStream.StreamEngine
                     _TechnicianHourlyRate = 0.0M;
                 }
             }
-            if (xlRange.Cells[i, 12].Value2 != null)
+            if (xlRange.Cells[i, 14].Value2 != null)
             {
 
                 try
                 {
-                    _TravelCostHoursPerunit = decimal.Parse(xlRange.Cells[i, 12].Value2.ToString().Replace("$", "").Trim()) ?? null;
+                    _TravelCostHoursPerunit = decimal.Parse(xlRange.Cells[i, 14].Value2.ToString().Replace("$", "").Trim()) ?? null;
                     _TravelCostHoursPerunit = decimal.Parse(_TravelCostHoursPerunit.ToString().Replace("$", "").Trim());
                     _TravelCostHoursPerunit = Math.Round(_TravelCostHoursPerunit, 2, MidpointRounding.ToEven);
                 }
@@ -299,12 +332,12 @@ namespace CostModelDataStream.StreamEngine
                     _TravelCostHoursPerunit = 0.0M;
                 }
             }
-            if (xlRange.Cells[i, 13].Value2 != null)
+            if (xlRange.Cells[i, 15].Value2 != null)
             {
 
                 try
                 {
-                    _LabourCostHoursPerUnit = decimal.Parse(xlRange.Cells[i, 13].Value2.ToString().Replace("$", "").Trim()) ?? null;
+                    _LabourCostHoursPerUnit = decimal.Parse(xlRange.Cells[i, 15].Value2.ToString().Replace("$", "").Trim()) ?? null;
                     _LabourCostHoursPerUnit = decimal.Parse(_LabourCostHoursPerUnit.ToString().Replace("$", "").Trim());
                     _LabourCostHoursPerUnit = Math.Round(_LabourCostHoursPerUnit, 2, MidpointRounding.ToEven);
                 }
@@ -313,12 +346,12 @@ namespace CostModelDataStream.StreamEngine
                     _LabourCostHoursPerUnit = 0.0M;
                 }
             }
-            if (xlRange.Cells[i, 14].Value2 != null)
+            if (xlRange.Cells[i, 16].Value2 != null)
             {
 
                 try
                 {
-                    _VariableCostPerUnitNA = decimal.Parse(xlRange.Cells[i, 14].Value2.ToString().Replace("$", "").Trim()) ?? null;
+                    _VariableCostPerUnitNA = decimal.Parse(xlRange.Cells[i, 16].Value2.ToString().Replace("$", "").Trim()) ?? null;
                     _VariableCostPerUnitNA = decimal.Parse(_VariableCostPerUnitNA.ToString().Replace("$", "").Trim());
                     _VariableCostPerUnitNA = Math.Round(_VariableCostPerUnitNA, 2, MidpointRounding.ToEven);
                 }
@@ -327,12 +360,12 @@ namespace CostModelDataStream.StreamEngine
                     _VariableCostPerUnitNA = 0.0M;
                 }
             }
-            if (xlRange.Cells[i, 15].Value2 != null)
+            if (xlRange.Cells[i, 17].Value2 != null)
             {
 
                 try
                 {
-                    _PMCostHoursPerUnit = decimal.Parse(xlRange.Cells[i, 15].Value2.ToString().Replace("$", "").Trim()) ?? null;
+                    _PMCostHoursPerUnit = decimal.Parse(xlRange.Cells[i, 17].Value2.ToString().Replace("$", "").Trim()) ?? null;
                     _PMCostHoursPerUnit = decimal.Parse(_PMCostHoursPerUnit.ToString().Replace("$", "").Trim());
                     _PMCostHoursPerUnit = Math.Round(_PMCostHoursPerUnit, 2, MidpointRounding.ToEven);
                 }
@@ -341,12 +374,12 @@ namespace CostModelDataStream.StreamEngine
                     _PMCostHoursPerUnit = 0.0M;
                 }
             }
-            if (xlRange.Cells[i, 16].Value2 != null)
+            if (xlRange.Cells[i, 18].Value2 != null)
             {
 
                 try
                 {
-                    _TotalCost = decimal.Parse(xlRange.Cells[i, 16].Value2.ToString().Replace("$", "").Trim()) ?? null;
+                    _TotalCost = decimal.Parse(xlRange.Cells[i, 18].Value2.ToString().Replace("$", "").Trim()) ?? null;
                     _TotalCost = decimal.Parse(_TotalCost.ToString().Replace("$", "").Trim());
                     _TotalCost = Math.Round(_TotalCost, 2, MidpointRounding.ToEven);
                 }
@@ -355,12 +388,12 @@ namespace CostModelDataStream.StreamEngine
                     _TotalCost = 0.0M;
                 }
             }
-            if (xlRange.Cells[i, 17].Value2 != null)
+            if (xlRange.Cells[i, 19].Value2 != null)
             {
 
                 try
                 {
-                    _ProfitPerUnit = decimal.Parse(xlRange.Cells[i, 17].Value2.ToString().Replace("$", "").Trim()) ?? null;
+                    _ProfitPerUnit = decimal.Parse(xlRange.Cells[i, 19].Value2.ToString().Replace("$", "").Trim()) ?? null;
                     _ProfitPerUnit = decimal.Parse(_ProfitPerUnit.ToString().Replace("$", "").Trim());
                     _ProfitPerUnit = Math.Round(_ProfitPerUnit, 2, MidpointRounding.ToEven);
                 }
@@ -369,12 +402,12 @@ namespace CostModelDataStream.StreamEngine
                     _ProfitPerUnit = 0.0M;
                 }
             }
-            if (xlRange.Cells[i, 18].Value2 != null)
+            if (xlRange.Cells[i, 20].Value2 != null)
             {
 
                 try
                 {
-                    _TotalProfit = decimal.Parse(xlRange.Cells[i, 18].Value2.ToString().Replace("$", "").Trim()) ?? null;
+                    _TotalProfit = decimal.Parse(xlRange.Cells[i, 20].Value2.ToString().Replace("$", "").Trim()) ?? null;
                     _TotalProfit = decimal.Parse(_TotalProfit.ToString().Replace("$", "").Trim());
                     _TotalProfit = Math.Round(_TotalProfit, 2, MidpointRounding.ToEven);
                 }
@@ -389,9 +422,9 @@ namespace CostModelDataStream.StreamEngine
                 ServiceRevenue s = new ServiceRevenue()
                 {
                     ServiceDescription = ServiceDescription,
-                    PricePerUnit = PricePerUnit,
-                    Quantity = Quantity,
-                    TotalPrice = TotalPrice,
+                    PricePerUnit = Convert.ToString(PricePerUnit).Trim(),
+                    Quantity = Convert.ToString(Quantity),
+                    TotalPrice = Convert.ToString(TotalPrice).Trim(),
                     ServiceActivityID = ServiceActivitiesID,
                     OpportunityNumberID = OpportunityNumberID,
                     CostCategory = _CostCategory,

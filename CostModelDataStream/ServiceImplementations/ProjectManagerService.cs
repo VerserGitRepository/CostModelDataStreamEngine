@@ -11,25 +11,27 @@ namespace CostModelDataStream.ServiceImplementations
     {
         public static int CreateProjectManager(string PM)
         {
+            string[] PMFNLN = PM.Split(',');
              int returnID = 0;
             using (CostModelTimeSheetDB db = new CostModelTimeSheetDB())
             {
-                var IsExist = db.ProjectManagers.Where(x => x.ProjectManagerName == PM).FirstOrDefault();
-                if (IsExist == null)
+                var list = db.ProjectManagers;
+                foreach (ProjectManagers pm in list)
                 {
-                    var add = new ProjectManagers() {
-                        ProjectManagerName=PM,
-                        IsActive = true
-                    };
-                    var Project = db.ProjectManagers.Add(add);
-                    db.SaveChanges();
-                    returnID = Project.Id;
+                    if (pm.ProjectManagerName.Contains(PMFNLN[0]))
+                    {
+                        return pm.Id;
+                    }
                 }
-                else
-                {
-                    returnID = IsExist.Id;
-                }            
-
+               
+                var add = new ProjectManagers() {
+                    ProjectManagerName=PM,
+                    IsActive = true
+                };
+                var Project = db.ProjectManagers.Add(add);
+                db.SaveChanges();
+                returnID = Project.Id;
+                
             }
             return returnID;             
         }

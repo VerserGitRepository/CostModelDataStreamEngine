@@ -14,7 +14,7 @@ namespace CostModelDataStream.ServiceImplementations
             int returnID = 0;
             using (CostModelTimeSheetDB db = new CostModelTimeSheetDB())
             {
-                var IsExist = db.Projects.Where(x => x.ProjectName.Replace("-","").Replace("_","").Replace(" ","").ToLower() == ProjectName.Replace("-", "").Replace("_", "").Replace(" ", "").ToLower()).FirstOrDefault();
+                var IsExist = db.Projects.Where(x => x.JMSProjectID== JMSProjectId).FirstOrDefault();
                 if (IsExist == null)
                 {
                     var add = new Projects()
