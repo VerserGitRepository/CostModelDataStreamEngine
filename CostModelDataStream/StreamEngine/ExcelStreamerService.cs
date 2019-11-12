@@ -44,7 +44,6 @@ namespace CostModelDataStream.StreamEngine
                 string OpportunityNumber = xlRange.Cells[3, 2].Value2.ToString();
                 Logger.Logger.Info("The opportunity number is "+OpportunityNumber);
                 var Returnvalidation = AddProject(xlRange, OpportunityNumber);
-
                 if (!Returnvalidation.IsSuccess && Returnvalidation.OpportunityNumberID == 0)
                 {
                     Environment.Exit(0);
@@ -52,10 +51,8 @@ namespace CostModelDataStream.StreamEngine
                 int OpportunityNumberID = Returnvalidation.OpportunityNumberID;
                 xlWorksheet = xlWorkbook.Sheets["Pricing summary"];
                 xlRange = xlWorksheet.UsedRange;
-
                 Range cells = xlRange.Worksheet.Cells;
                 bool ishdn = true;
-
                 int rowCount = xlRange.Rows.Count;
                 string checkStop = "";
                 for (int i = 7; i <= rowCount; i++)
@@ -71,11 +68,8 @@ namespace CostModelDataStream.StreamEngine
                     {
                         break;
                     }
-
                     AddServiceRevenue(xlRange, OpportunityNumberID, i);
-                }
-
-                
+                }                
                 if (Returnvalidation.IsSuccess == true)
                 {
                     filesvalidate.AddNewFile(filename, OpportunityNumber);
@@ -130,20 +124,8 @@ namespace CostModelDataStream.StreamEngine
                 var Approver = xlRange.Cells[4, 5].Value2.ToString() ?? null;
             int JMSProjectId = GetJMSProjectId(xlRange.Cells[8, 2].Value2.ToString());
 
-            //create Project Manager, Opp,Project if not exist
-            int projectmanagerID = ProjectManagerService.CreateProjectManager(ProjectManager);
-            int projectID = 0;
-            int OpportunityNumberID = 0;           
-            if (projectmanagerID >0)
-            {
-                projectID = ProjectService.CreateProject(projectName, JMSProjectId);
-            }
-            if (projectID >0)
-            {
-                OpportunityNumberID = OpportunityNumberService.CreateOpportunityNumber(int.Parse(OpportunityNumber), projectID,projectmanagerID);
-            }
-
-                 ProjectDetails project = new ProjectDetails
+      
+               ProjectDetails project = new ProjectDetails
                 {
                     Customer = Customer,
                     OpportunityNumber = OpportunityNumber,
@@ -159,26 +141,29 @@ namespace CostModelDataStream.StreamEngine
                 {
                     DateTime StartDate = Convert.ToDateTime(xlRange.Cells[2, 5].Value.ToString());
                     project.StartDate = StartDate;
-                }
-                //if (xlRange.Cells[3, 5].Value.ToString() != null)
-                //{
-                //    DateTime EndDate = Convert.ToDateTime(xlRange.Cells[3, 5].Value.ToString());
-                //    project.EndDate = EndDate;
-                //}
-                // project.EndDate = DateTime.Now;
+                }              
 
-                ProjectDetailsService ProjectServicemethod = new ProjectDetailsService();
+            ReturnValues = ProjectDetailsService.CreateProjectDetails(project);
+            int projectmanagerID = ProjectManagerService.CreateProjectManager(ProjectManager);
+            int projectID = 0;
+            int OpportunityNumberID = 0;
+            var _customer = ProjectDetailsService.AddCustomer(project.Customer, project.OpportunityNumber);
+            int salesmanid = SalesManagerService.AddSalesManager(project.SalesManager);
+            if (projectmanagerID > 0)
+            {
+                projectID = ProjectService.CreateProject(projectName, JMSProjectId);
+            }
+            if (projectID > 0)
+            {
+                OpportunityNumberID = OpportunityNumberService.CreateOpportunityNumber(int.Parse(OpportunityNumber), projectID, projectmanagerID, salesmanid);
+            }           
 
-                ReturnValues = ProjectServicemethod.CreateProjectDetails(project);
-                ReturnValues.OpportunityNumberID = OpportunityNumberID;
+            ReturnValues.OpportunityNumberID = OpportunityNumberID;
             return ReturnValues;
                        
         }
         private static void AddServiceRevenue(Excel.Range xlRange,  int OpportunityNumberID, int i)
         {
-            
-            
-
             var ServiceDescription = xlRange.Cells[i, 1].Value2.ToString();
             decimal PricePerUnit = 0.0M;
             var _CostCategory = "";
@@ -334,7 +319,6 @@ namespace CostModelDataStream.StreamEngine
             }
             if (xlRange.Cells[i, 15].Value2 != null)
             {
-
                 try
                 {
                     _LabourCostHoursPerUnit = decimal.Parse(xlRange.Cells[i, 15].Value2.ToString().Replace("$", "").Trim()) ?? null;
@@ -348,7 +332,6 @@ namespace CostModelDataStream.StreamEngine
             }
             if (xlRange.Cells[i, 16].Value2 != null)
             {
-
                 try
                 {
                     _VariableCostPerUnitNA = decimal.Parse(xlRange.Cells[i, 16].Value2.ToString().Replace("$", "").Trim()) ?? null;
@@ -362,7 +345,6 @@ namespace CostModelDataStream.StreamEngine
             }
             if (xlRange.Cells[i, 17].Value2 != null)
             {
-
                 try
                 {
                     _PMCostHoursPerUnit = decimal.Parse(xlRange.Cells[i, 17].Value2.ToString().Replace("$", "").Trim()) ?? null;
@@ -390,7 +372,6 @@ namespace CostModelDataStream.StreamEngine
             }
             if (xlRange.Cells[i, 19].Value2 != null)
             {
-
                 try
                 {
                     _ProfitPerUnit = decimal.Parse(xlRange.Cells[i, 19].Value2.ToString().Replace("$", "").Trim()) ?? null;
@@ -416,7 +397,6 @@ namespace CostModelDataStream.StreamEngine
                     _TotalProfit = 0.0M;
                 }
             }
-
             int ServiceActivitiesID= ServiceActivityHelperService.CreateServiceActivity(ServiceDescription);
 
                 ServiceRevenue s = new ServiceRevenue()
@@ -441,27 +421,19 @@ namespace CostModelDataStream.StreamEngine
                     TotalCost = _TotalCost,
                     ProfitPerUnit = _ProfitPerUnit,
                     TotalProfit = _TotalProfit,
-                   // ActualMarginOnOverHead = _ActualMarginOnOverHead,
-                    
+                   // ActualMarginOnOverHead = _ActualMarginOnOverHead,                    
                 };
                 ServiceRevenueService servicerevenue = new ServiceRevenueService();
-                servicerevenue.CreateServiceCost(s);
-           
+                servicerevenue.CreateServiceCost(s);           
         }
         private static void AddServiceCost(Excel.Range xlRange, int OpportunityNumberID, int i)
         {
-
-
-
             string _ActualMarginOnOverHead = xlRange.Cells[i, 20].Value2.ToString() ?? null;
-
             ServiceCost c = new ServiceCost()
             {
-
             };
             ServiceCostService costservice = new ServiceCostService();
             costservice.CreateServiceCost(c);
-
         }
         public static void ReleaseFile(Excel.Range xlRange, Excel._Worksheet xlWorksheet, Excel.Workbook xlWorkbook, Excel.Application xlApp)
         {

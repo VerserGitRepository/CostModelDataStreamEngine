@@ -22,6 +22,7 @@ namespace CostModelDataStream.CostModelEntities
         public virtual DbSet<Resources> Resources { get; set; }
         public virtual DbSet<OpportunityNumbers> OpportunityNumbers { get; set; }
         public virtual DbSet<ServiceActivities> ServiceActivities { get; set; }
+        public virtual DbSet<Customers> Customers { get; set; }       
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             modelBuilder.Entity<ProjectDetails>()

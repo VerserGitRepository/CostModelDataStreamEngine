@@ -12,24 +12,18 @@ namespace CostModelDataStream.ServiceImplementations
        
         public void CreateServiceCost(ServiceRevenue servicerevenueData)
         {
-            //using (CostModelTimeSheetDB db = new CostModelTimeSheetDB())
-            //{               
-            //    db.ServiceRevenues.Add(servicerevenueData);
-            //    db.SaveChanges();
-            //}
-            int returnID = 0;
             using (CostModelTimeSheetDB db = new CostModelTimeSheetDB())
             {
-                var IsExist = db.ServiceRevenues.Where(x => x.ServiceDescription == servicerevenueData.ServiceDescription).FirstOrDefault();
-                if (IsExist != null)
+                var IsExist = db.ServiceRevenues.Where(x => x.ServiceActivityID == servicerevenueData.ServiceActivityID 
+                && x.OpportunityNumberID == servicerevenueData.OpportunityNumberID && x.Quantity== servicerevenueData.Quantity 
+                && x.PricePerUnit == servicerevenueData.PricePerUnit.ToString()).FirstOrDefault();
+                if (IsExist == null)
                 {
-                    servicerevenueData.ServiceActivityID = IsExist.Id;
-                }
-                db.ServiceRevenues.Add(servicerevenueData);
-                db.SaveChanges();
-
-            }
-           // return returnID;
+                    db.ServiceRevenues.Add(servicerevenueData);
+                    db.SaveChanges();
+                   
+                }                
+            }          
         }
     }
 }
