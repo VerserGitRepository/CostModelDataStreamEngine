@@ -12,6 +12,7 @@ namespace CostModelDataStream.ServiceImplementations
         public static int CreateServiceActivity(string ServiceActivity)
         {
             int returnID = 0;
+           // ServiceActivity = ServiceActivity.Substring(0, 450);
             using (CostModelTimeSheetDB db = new CostModelTimeSheetDB())
             {
                 var IsExist = db.ServiceActivities.Where(x => x.ServiceActivityDescription == ServiceActivity).FirstOrDefault();

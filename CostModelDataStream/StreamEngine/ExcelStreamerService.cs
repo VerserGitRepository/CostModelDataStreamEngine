@@ -8,15 +8,18 @@ using Excel = Microsoft.Office.Interop.Excel;
 using CostModelDataStream.Logger;
 using System.Data.SqlClient;
 using Microsoft.Office.Interop.Excel;
+using log4net;
+using System.Reflection;
 
 namespace CostModelDataStream.StreamEngine
 {
     public class ExcelStreamerService
     {
+        static ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         public static void ReadExcel()
         {
             string CostModelFolders = ConfigurationSettings.AppSettings.Get("CostModelFolders");
-
+           
             FilesValidateService filesvalidate = new FilesValidateService();
             if (!Directory.Exists(CostModelFolders))
             {
@@ -24,72 +27,96 @@ namespace CostModelDataStream.StreamEngine
             }
             foreach (string filename in Directory.GetFiles(CostModelFolders))
             {
-                Logger.Logger.Info("processing data for " + filename);
-                if (!File.Exists(filename))
+                try
                 {
-                    Environment.Exit(0);
-                }
-                var returnvalidation = filesvalidate.IsFileExists(filename);
-               
-                if (returnvalidation.IsFileProcessSuccess == true && returnvalidation.FileName != null)
-                {
-                    Logger.Logger.Info("This file has already been processed. " + filename);
-                    continue;
-                }
-                Excel.Application xlApp = new Excel.Application();
-                Excel.Workbook xlWorkbook = xlApp.Workbooks.Open(filename);
-                Excel._Worksheet xlWorksheet = xlWorkbook.Sheets["Project Details"];  
-                Excel.Range xlRange = xlWorksheet.UsedRange;
-                Logger.Logger.Info("Adding the opportunity number.");
-                string OpportunityNumber = xlRange.Cells[3, 2].Value2.ToString();
-                Logger.Logger.Info("The opportunity number is "+OpportunityNumber);
-                var Returnvalidation = AddProject(xlRange, OpportunityNumber);
-                if (!Returnvalidation.IsSuccess && Returnvalidation.OpportunityNumberID == 0)
-                {
-                    Environment.Exit(0);
-                }
-                int OpportunityNumberID = Returnvalidation.OpportunityNumberID;
-                xlWorksheet = xlWorkbook.Sheets["Pricing summary"];
-                xlRange = xlWorksheet.UsedRange;
-                Range cells = xlRange.Worksheet.Cells;
-                bool ishdn = true;
-                int rowCount = xlRange.Rows.Count;
-                string checkStop = "";
-                for (int i = 7; i <= rowCount; i++)
-                {
-                    ishdn = cells.Rows[i].Hidden;
-                    if (cells.Rows[i].Hidden)
+                    Log.Info("processing data for " + filename);
+                    if (!File.Exists(filename))
                     {
+                        Environment.Exit(0);
+                    }
+                    var returnvalidation = filesvalidate.IsFileExists(filename);
+
+                    if (returnvalidation.IsFileProcessSuccess == true && returnvalidation.FileName != null)
+                    {
+                        Log.Info("This file has already been processed. " + filename);
                         continue;
                     }
-                    checkStop = xlRange.Cells[i, 6].Value2; 
-
-                    if (checkStop != null && checkStop == "END")
+                    Excel.Application xlApp = new Excel.Application();
+                    Excel.Workbook xlWorkbook = xlApp.Workbooks.Open(filename);
+                    Excel._Worksheet xlWorksheet = xlWorkbook.Sheets["Project Details"];
+                    Excel.Range xlRange = xlWorksheet.UsedRange;
+                    Log.Info("Adding the opportunity number.");
+                    string OpportunityNumber = xlRange.Cells[3, 2].Value2.ToString();
+                    Log.Info("The opportunity number is " + OpportunityNumber);
+                    var Returnvalidation = AddProject(xlRange, OpportunityNumber);
+                    string ServiceDescriptionval = "";
+                    if (!Returnvalidation.IsSuccess && Returnvalidation.OpportunityNumberID == 0)
                     {
-                        break;
+                        Environment.Exit(0);
                     }
-                    AddServiceRevenue(xlRange, OpportunityNumberID, i);
-                }                
-                if (Returnvalidation.IsSuccess == true)
-                {
-                    filesvalidate.AddNewFile(filename, OpportunityNumber);
+                    int OpportunityNumberID = Returnvalidation.OpportunityNumberID;
+                    xlWorksheet = xlWorkbook.Sheets["Pricing summary"];
+                    xlRange = xlWorksheet.UsedRange;
+                    Range cells = xlRange.Worksheet.Cells;
+                    bool ishdn = true;
+                    int rowCount = xlRange.Rows.Count;
+                    string checkStop = "";
+                    for (int i = 7; i <= rowCount; i++)
+                    {
+                        ishdn = cells.Rows[i].Hidden;
+                        if (cells.Rows[i].Hidden)
+                        {
+                            continue;
+                        }
+                        checkStop = xlRange.Cells[i, 6].Value2;
+                       
+                        if (checkStop != null && checkStop.ToLower() == "end")
+                        {
+                            break;
+                        }
+                        else if (xlRange.Cells[i, 2].Value2 == null)
+                        {
+                            continue;
+                        }
+
+                        try
+                        {
+                            ServiceDescriptionval = xlRange.Cells[i, 1].Value2.ToString();
+                            if (ServiceDescriptionval.ToLower().Trim() == "service description") { continue; }
+
+                        }
+                        catch (Exception)
+                        { continue; }
+                        AddServiceRevenue(xlRange, OpportunityNumberID, i);
+                    }
+                    //if (Returnvalidation.IsSuccess == true)
+                    //{
+                    //    filesvalidate.AddNewFile(filename, OpportunityNumber);
+                    //}
+
+
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+                    Marshal.ReleaseComObject(xlRange);
+                    Marshal.ReleaseComObject(xlWorksheet);
+
+                    xlWorkbook.Close();
+                    Marshal.ReleaseComObject(xlWorkbook);
+                    xlApp.Quit();
+                    Marshal.ReleaseComObject(xlApp);
                 }
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-                Marshal.ReleaseComObject(xlRange);
-                Marshal.ReleaseComObject(xlWorksheet);
-               
-                xlWorkbook.Close();
-                Marshal.ReleaseComObject(xlWorkbook);
-                xlApp.Quit();
-                Marshal.ReleaseComObject(xlApp);
+                catch (Exception ex)
+                {
+                    Log.Info("exception occurred. The details are " + ex.ToString());
+                    continue;
+                }
             }
         }
         private static int GetJMSProjectId(string ProjectName)
         {
             string connString = ConfigurationSettings.AppSettings["JMS"].Trim();
 
-            string sql = "select id from Projects where LTRIM(RTRIM(lower(summary))) like('%" + ProjectName.ToLower().Trim() + "%')";
+            string sql = "select id from Projects where LTRIM(RTRIM(lower(summary))) ='" + ProjectName.ToLower().Trim()+"'" ;
             int newProdID = 0;
             using (SqlConnection conn = new SqlConnection(connString))
             {
@@ -107,21 +134,29 @@ namespace CostModelDataStream.StreamEngine
             }
             return (int)newProdID;
         }
+
         private static ReturnEntityModel AddProject(Excel.Range xlRange, string OpportunityNumber)
         {
-            Logger.Logger.Info("Inside method AddProject");
-
+            Log.Info("Inside method AddProject");
+            string Approver = "";
             ReturnEntityModel ReturnValues;
-            Logger.Logger.Info("Reading values.");
+            Log.Info("Reading values.");
             var Customer = xlRange.Cells[2, 2].Value2.ToString() ?? null;
             var projectName = xlRange.Cells[8, 2].Value2.ToString() ?? null;
-            Logger.Logger.Info("customer values."+ Customer);
+            Log.Info("customer values."+ Customer);
             var SiteAddress = xlRange.Cells[4, 2].Value2.ToString() ?? null;
                // var CustomerContactName = xlRange.Cells[2, 2].Value2.ToString() ?? null;
                 var VerserBranch = xlRange.Cells[5, 5].Value2.ToString() ?? null;
                 var SalesManager = xlRange.Cells[6, 5].Value2.ToString() ?? null;
                 var ProjectManager = xlRange.Cells[7, 5].Value2 ?? null;
-                var Approver = xlRange.Cells[4, 5].Value2.ToString() ?? null;
+            try
+            {
+                Approver = xlRange.Cells[4, 5].Value2.ToString() ?? null;
+            }
+            catch (Exception)
+            {
+
+            }
             int JMSProjectId = GetJMSProjectId(xlRange.Cells[8, 2].Value2.ToString());
 
       
@@ -147,7 +182,7 @@ namespace CostModelDataStream.StreamEngine
             int projectmanagerID = ProjectManagerService.CreateProjectManager(ProjectManager);
             int projectID = 0;
             int OpportunityNumberID = 0;
-            var _customer = ProjectDetailsService.AddCustomer(project.Customer, project.OpportunityNumber);
+            var _customer = ProjectDetailsService.AddCustomer(project);
             int salesmanid = SalesManagerService.AddSalesManager(project.SalesManager);
             if (projectmanagerID > 0)
             {
@@ -164,7 +199,19 @@ namespace CostModelDataStream.StreamEngine
         }
         private static void AddServiceRevenue(Excel.Range xlRange,  int OpportunityNumberID, int i)
         {
-            var ServiceDescription = xlRange.Cells[i, 1].Value2.ToString();
+            string ServiceDescription = "";
+            try
+            {
+                 ServiceDescription = xlRange.Cells[i, 1].Value2.ToString();
+               
+            }
+            catch (Exception)
+            { return; }
+            if (ServiceDescription.Length >= 500)
+            {
+                ServiceDescription = ServiceDescription.Substring(0, 450);
+            }
+            ServiceDescription = ServiceDescription.Replace("'", "");
             decimal PricePerUnit = 0.0M;
             var _CostCategory = "";
             decimal _CostPerUnit = 0.0M;

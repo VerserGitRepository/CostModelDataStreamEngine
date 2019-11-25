@@ -34,30 +34,37 @@ namespace CostModelDataStream.ServiceImplementations
             return ReturnValues;
         }
 
-        public static ReturnEntityModel AddCustomer(string customer, string _opportunity)
+        public static ReturnEntityModel AddCustomer(ProjectDetails project)
         {
             var ReturnValues = new ReturnEntityModel();           
             ReturnValues.IsSuccess = false;
             ReturnValues.Message = "Invalid parameters";
 
-            if (customer ==null  || _opportunity == null)
-            {
-                ReturnValues.IsSuccess = false;
-                ReturnValues.Message = "Invalid parameters";
-                return ReturnValues;
-            }
+            //if (customer ==null  || _opportunity == null)
+            //{
+            //    ReturnValues.IsSuccess = false;
+            //    ReturnValues.Message = "Invalid parameters";
+            //    return ReturnValues;
+            //}
             using (CostModelTimeSheetDB db = new CostModelTimeSheetDB())
             {
                 try
                 {
-                    int _opportunityid = Convert.ToInt32(_opportunity);
+                    int _opportunityid = Convert.ToInt32(project.OpportunityNumber);
+                    bool insert = true;
                     var _opportunityId = db.OpportunityNumbers.Where(x => x.OpportunityNumber == _opportunityid).FirstOrDefault();
-
-                    var IsExist = db.Customers.Where(x => x.CustomerName == customer && x.ProjectId == _opportunityId.ProjectID && x.OpportunityId == _opportunityId.Id).FirstOrDefault();
-                    if (IsExist == null)
+                    if (_opportunityId != null)
+                    {
+                        var IsExist = db.Customers.Where(x => x.CustomerName == project.Customer && x.ProjectId == _opportunityId.ProjectID && x.OpportunityId == _opportunityId.Id).FirstOrDefault();
+                        if (IsExist != null)
+                        {
+                            insert = false;
+                        }
+                    }
+                    if (insert)
                     {
                         var _a = new Customers();
-                        _a.CustomerName = customer; _a.ProjectId =  _opportunityId.ProjectID; _a.OpportunityId = _opportunityId.Id; _a.IsActive = true;
+                        _a.CustomerName = project.Customer; _a.ProjectId =  project.Id; _a.OpportunityId = Convert.ToInt32(project.OpportunityNumber); _a.IsActive = true;
                         db.Customers.Add(_a);
                         db.SaveChanges();
                         ReturnValues.IsSuccess = true;
@@ -67,7 +74,7 @@ namespace CostModelDataStream.ServiceImplementations
                 catch (Exception ex)
                 {
 
-                    Logger.Logger.Error($"Error Occured At Customer Insert Class {ex.Message}");
+                   //Log.Error($"Error Occured At Customer Insert Class {ex.Message}");
                 }
             }
             return ReturnValues;
