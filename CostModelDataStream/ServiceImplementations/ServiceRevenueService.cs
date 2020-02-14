@@ -21,8 +21,12 @@ namespace CostModelDataStream.ServiceImplementations
                 {
                     db.ServiceRevenues.Add(servicerevenueData);
                     db.SaveChanges();
-                   
-                }                
+
+                }
+                //else
+                //{
+
+                //}
             }          
         }
     }

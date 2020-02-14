@@ -17,7 +17,7 @@ namespace CostModelDataStream.ServiceImplementations
 
             using (CostModelTimeSheetDB db = new CostModelTimeSheetDB())
             {
-               var IsExist= db.ProjectDetails.Where(x => x.OpportunityNumber == ProjectData.OpportunityNumber && x.StartDate == ProjectData.StartDate).FirstOrDefault();
+               var IsExist= db.ProjectDetails.Where(x => x.OpportunityNumber == ProjectData.OpportunityNumber).FirstOrDefault();
                 if (IsExist ==null)
                 {
                  var OpportunityId =   db.ProjectDetails.Add(ProjectData);

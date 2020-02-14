@@ -10,6 +10,7 @@ using System.Data.SqlClient;
 using Microsoft.Office.Interop.Excel;
 using log4net;
 using System.Reflection;
+using System.Diagnostics;
 
 namespace CostModelDataStream.StreamEngine
 {
@@ -25,6 +26,7 @@ namespace CostModelDataStream.StreamEngine
             {
                 Environment.Exit(0);
             }
+            string theFileName = "";
             foreach (string filename in Directory.GetFiles(CostModelFolders))
             {
                 try
@@ -55,13 +57,29 @@ namespace CostModelDataStream.StreamEngine
                         Environment.Exit(0);
                     }
                     int OpportunityNumberID = Returnvalidation.OpportunityNumberID;
-                    xlWorksheet = xlWorkbook.Sheets["Pricing summary"];
+                    try
+                    {
+                        xlWorksheet = xlWorkbook.Sheets["Pricing Summary"];
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Info("The exception has occurred. The details are " + ex.ToString());
+                        try
+                        {
+                            xlWorksheet = xlWorkbook.Sheets["Summary"];
+                        }
+                        catch (Exception ex1)
+                        {
+                            Log.Info("Double exception. The file format is incorrect" + ex1.ToString());
+                            continue;
+                        }
+                    }
                     xlRange = xlWorksheet.UsedRange;
                     Range cells = xlRange.Worksheet.Cells;
                     bool ishdn = true;
                     int rowCount = xlRange.Rows.Count;
                     string checkStop = "";
-                    for (int i = 7; i <= rowCount; i++)
+                    for (int i = 6; i <= rowCount; i++)
                     {
                         ishdn = cells.Rows[i].Hidden;
                         if (cells.Rows[i].Hidden)
@@ -89,10 +107,10 @@ namespace CostModelDataStream.StreamEngine
                         { continue; }
                         AddServiceRevenue(xlRange, OpportunityNumberID, i);
                     }
-                    //if (Returnvalidation.IsSuccess == true)
-                    //{
-                    //    filesvalidate.AddNewFile(filename, OpportunityNumber);
-                    //}
+                    if (Returnvalidation.IsSuccess == true)
+                    {
+                        filesvalidate.AddNewFile(filename, OpportunityNumber);
+                    }
 
 
                     GC.Collect();
@@ -104,6 +122,13 @@ namespace CostModelDataStream.StreamEngine
                     Marshal.ReleaseComObject(xlWorkbook);
                     xlApp.Quit();
                     Marshal.ReleaseComObject(xlApp);
+                   // Process[] pro = Process.GetProcessesByName("excel");
+                    foreach(Process pro in Process.GetProcessesByName("excel"))
+                    {
+                        pro.Kill();
+                        pro.WaitForExit();
+                    }
+                    
                 }
                 catch (Exception ex)
                 {
@@ -139,12 +164,20 @@ namespace CostModelDataStream.StreamEngine
         {
             Log.Info("Inside method AddProject");
             string Approver = "";
+            string SiteAddress = "";
             ReturnEntityModel ReturnValues;
             Log.Info("Reading values.");
             var Customer = xlRange.Cells[2, 2].Value2.ToString() ?? null;
             var projectName = xlRange.Cells[8, 2].Value2.ToString() ?? null;
             Log.Info("customer values."+ Customer);
-            var SiteAddress = xlRange.Cells[4, 2].Value2.ToString() ?? null;
+            try
+            {
+                SiteAddress = xlRange.Cells[4, 2].Value2.ToString() ?? null;
+            }
+            catch (Exception ex)
+            {
+                Log.Info(ex.ToString());
+            }
                // var CustomerContactName = xlRange.Cells[2, 2].Value2.ToString() ?? null;
                 var VerserBranch = xlRange.Cells[5, 5].Value2.ToString() ?? null;
                 var SalesManager = xlRange.Cells[6, 5].Value2.ToString() ?? null;
@@ -172,11 +205,18 @@ namespace CostModelDataStream.StreamEngine
                    
                     Approver = Approver
                 };
+            try
+            {
                 if (xlRange.Cells[2, 5].Value.ToString() != null)
                 {
                     DateTime StartDate = Convert.ToDateTime(xlRange.Cells[2, 5].Value.ToString());
                     project.StartDate = StartDate;
-                }              
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Info("Exception occurred in project startdate. The details are " + ex.ToString());
+            }
 
             ReturnValues = ProjectDetailsService.CreateProjectDetails(project);
             int projectmanagerID = ProjectManagerService.CreateProjectManager(ProjectManager);
