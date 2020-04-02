@@ -165,6 +165,9 @@ namespace CostModelDataStream.StreamEngine
             Log.Info("Inside method AddProject");
             string Approver = "";
             string SiteAddress = "";
+            string VerserBranch = "";
+            string SalesManager = "";
+            string ProjectManager = "";
             ReturnEntityModel ReturnValues;
             Log.Info("Reading values.");
             var Customer = xlRange.Cells[2, 2].Value2.ToString() ?? null;
@@ -178,10 +181,31 @@ namespace CostModelDataStream.StreamEngine
             {
                 Log.Info(ex.ToString());
             }
-               // var CustomerContactName = xlRange.Cells[2, 2].Value2.ToString() ?? null;
-                var VerserBranch = xlRange.Cells[5, 5].Value2.ToString() ?? null;
-                var SalesManager = xlRange.Cells[6, 5].Value2.ToString() ?? null;
-                var ProjectManager = xlRange.Cells[7, 5].Value2 ?? null;
+            try
+            {
+                // var CustomerContactName = xlRange.Cells[2, 2].Value2.ToString() ?? null;
+                VerserBranch = xlRange.Cells[5, 5].Value2.ToString() ?? null;
+            }
+            catch (Exception)
+            {
+
+            }
+            try
+            {
+                SalesManager = xlRange.Cells[6, 5].Value2.ToString() ?? null;
+            }
+            catch (Exception)
+            {
+
+            }
+            try
+            {
+                ProjectManager = xlRange.Cells[7, 5].Value2 ?? null;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
             try
             {
                 Approver = xlRange.Cells[4, 5].Value2.ToString() ?? null;
