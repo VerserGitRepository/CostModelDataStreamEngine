@@ -11,9 +11,8 @@ namespace CostModelDataStream
     {
         static void Main(string[] args)
         {
-           
-         ExcelStreamerService.ReadExcel();        
-           
+             ExcelStreamerService.ReadExcel();
+          //  CostModelLogger.InfoLogger("Test Log File");
         }
     }
 }

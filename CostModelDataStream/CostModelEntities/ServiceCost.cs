@@ -4,7 +4,6 @@ namespace CostModelDataStream.CostModelEntities
     using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
     using System.ComponentModel.DataAnnotations.Schema;
-    using System.Data.Entity.Spatial;
 
     [Table("ServiceCost")]
     public partial class ServiceCost
@@ -56,6 +55,8 @@ namespace CostModelDataStream.CostModelEntities
         [StringLength(50)]
         public string ActualMarginOnOverHead { get; set; }
 
-        public int OpportunityNumberID_FK { get; set; }
+        public int OpportunityNumberID { get; set; }
+
+        public int serviceactivity_ID { get; set; }
     }
 }

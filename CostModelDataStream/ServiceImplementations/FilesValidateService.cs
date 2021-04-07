@@ -28,17 +28,20 @@ namespace CostModelDataStream.ServiceImplementations
         {
             using (CostModelTimeSheetDB db = new CostModelTimeSheetDB())
             {
-                FilesProcessed fileadd = new FilesProcessed
+                var isvalid = db.FilesProcessed.Where(y => y.FileName == FileName).FirstOrDefault();
+                if (isvalid ==null)
                 {
-                    FileName = FileName,
-                    OpportunityNumber = OpportunityNumber,
-                    IsFileProcessSuccess = true,
-                    DateProcessed = DateTime.Now
-                };
-                db.FilesProcessed.Add(fileadd);
-                db.SaveChanges();
+                    FilesProcessed fileadd = new FilesProcessed
+                    {
+                        FileName = FileName,
+                        OpportunityNumber = OpportunityNumber,
+                        IsFileProcessSuccess = true,
+                        DateProcessed = DateTime.Now
+                    };
+                    db.FilesProcessed.Add(fileadd);
+                    db.SaveChanges();
+                }              
             }
         }
-
     }
 }

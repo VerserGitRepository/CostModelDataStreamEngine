@@ -12,26 +12,36 @@ namespace CostModelDataStream.ServiceImplementations
         public static int CreateServiceActivity(string ServiceActivity)
         {
             int returnID = 0;
-            using (CostModelTimeSheetDB db = new CostModelTimeSheetDB())
+            try
             {
-                var IsExist = db.ServiceActivities.Where(x => x.ServiceActivityDescription == ServiceActivity).FirstOrDefault();
-                if (IsExist == null)
+                using (CostModelTimeSheetDB db = new CostModelTimeSheetDB())
                 {
-                    var add = new ServiceActivities()
+                    var IsExist = db.ServiceActivities.Where(x => x.ServiceActivityDescription == ServiceActivity).FirstOrDefault();
+                    if (IsExist == null)
                     {
-                        ServiceActivityDescription = ServiceActivity,
-                        ServiceCategory = "Project",
-                        IsActive = true
-                    };
-                    var ServiceActivitiesID = db.ServiceActivities.Add(add);
-                    db.SaveChanges();
-                    returnID = ServiceActivitiesID.Id;
-                }
-                else
-                {
-                    returnID = IsExist.Id;
+                        var add = new ServiceActivities()
+                        {
+                            ServiceActivityDescription = ServiceActivity,
+                            ServiceCategory = "Project",
+                            IsActive = true,
+                            Created = DateTime.Now
+                        };
+                        var ServiceActivitiesID = db.ServiceActivities.Add(add);
+                        db.SaveChanges();
+                        //    Console.WriteLine($"Creating New ServiceActivity {ServiceActivity}");
+                        CostModelLogger.InfoLogger($"Creating New ServiceActivity {ServiceActivity}");
+                        returnID = ServiceActivitiesID.Id;
+                    }
+                    else
+                    {
+                        returnID = IsExist.Id;
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+                CostModelLogger.ErrorLogger($"Error Occured While Creating New ServiceActivity, {ex.Message}");
+            }           
             return returnID;
         }
     }

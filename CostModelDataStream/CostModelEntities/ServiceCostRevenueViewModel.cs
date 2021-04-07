@@ -1,23 +1,21 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-    using System;
-    using System.Collections.Generic;
-    using System.ComponentModel.DataAnnotations;
-    using System.ComponentModel.DataAnnotations.Schema;
 namespace CostModelDataStream.CostModelEntities
 {
-    [Table("ServiceRevenue")]
-    public partial class ServiceRevenue
+   public class ServiceCostRevenueViewModel
     {
-        public int Id { get; set; }
-        [StringLength(500)]
-        public string ServiceDescription { get; set; }
+       
         public string PricePerUnit { get; set; }
         public string Quantity { get; set; }
         public string TotalPrice { get; set; }
         public int OpportunityNumberID { get; set; }
         public int? ServiceActivityID { get; set; }
-        [StringLength(500)]
-        public string CostCategory { get; set; }
+        public string ServiceDescription { get; set; }
+        public  string CostCategory { get; set; }
         public decimal CostPerUnit { get; set; }
         public decimal TravelCostPerUnit { get; set; }
         public decimal LabourCostPerUnit { get; set; }
@@ -32,6 +30,6 @@ namespace CostModelDataStream.CostModelEntities
         public decimal ProfitPerUnit { get; set; }
         public decimal TotalProfit { get; set; }
         public decimal ActualMarginOnOverHead { get; set; }
-
+        public int serviceactivity_ID { get; set; }
     }
 }
