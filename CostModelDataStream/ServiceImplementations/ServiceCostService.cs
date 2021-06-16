@@ -82,7 +82,8 @@ namespace CostModelDataStream.ServiceImplementations
                 {
                     db.ServiceCosts.Add(serviceCostData);
                     savechange = true;
-                    System.Console.WriteLine($"New  CostCategory Added {serviceCostData.CostCategory}" );
+                    CostModelLogger.InfoLogger($"New  CostCategory Added {serviceCostData.CostCategory}");
+                   // System.Console.WriteLine($"New  CostCategory Added {serviceCostData.CostCategory}" );
                 }
                 if (savechange)
                 {

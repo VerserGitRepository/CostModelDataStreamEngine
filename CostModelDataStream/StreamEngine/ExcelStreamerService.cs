@@ -27,6 +27,8 @@ namespace CostModelDataStream.StreamEngine
             var filesvalidate = new FilesValidateService();           
           
             string _FileNames=string.Empty;
+          
+            CostModelLogger.InfoLogger($"CostModel Folder Location : {CostModelFolders}");
             try
             {
                 if (!Directory.Exists(CostModelFolders))
@@ -41,6 +43,7 @@ namespace CostModelDataStream.StreamEngine
                     {
                         Environment.Exit(0);
                     }
+                    CostModelLogger.InfoLogger("====================================================================");
                     CostModelLogger.InfoLogger($"{_FileNames} File Opened and initiating to process");
                       _FileNames = _FileNames + $"{filename.Substring(31)}, ";
                     var returnvalidation = filesvalidate.IsFileExists(filename);
@@ -55,6 +58,7 @@ namespace CostModelDataStream.StreamEngine
                         Environment.Exit(0);
                     }
                     Excel.Application xlApp = new Excel.Application();
+                    xlApp.DisplayAlerts = false;
                     Thread.Sleep(3000);
                     Excel.Workbook xlWorkbook = xlApp.Workbooks.Open(filename);
                     //Console.WriteLine($"{filename} Processing...");                
@@ -73,7 +77,7 @@ namespace CostModelDataStream.StreamEngine
                     }
                     int OpportunityNumberID = Returnvalidation.OpportunityNumberID;
                     Thread.Sleep(2000);
-                    xlWorksheet = xlWorkbook.Sheets["Pricing Summary"];
+                    xlWorksheet = xlWorkbook.Sheets["Pricing Summary"]; 
                     Thread.Sleep(3000);
                     xlRange = xlWorksheet.UsedRange;
                     int rowCount = xlRange.Rows.Count;
@@ -109,17 +113,21 @@ namespace CostModelDataStream.StreamEngine
                         _Count ++;
                         GC.Collect();
                         GC.WaitForPendingFinalizers();
+
+                        xlApp.DisplayAlerts = false;
                         Marshal.ReleaseComObject(xlRange);
                         Marshal.ReleaseComObject(xlWorksheet);
+                        xlApp.ActiveWorkbook.Saved = true;
                         xlWorkbook.Close();
-                        Marshal.ReleaseComObject(xlWorkbook);
+                        Marshal.ReleaseComObject(xlWorkbook);                       
                         xlApp.Quit();
                         Marshal.ReleaseComObject(xlApp);
 
                         if (_Count >= Directory.GetFiles(CostModelFolders).Count())
                         {
                             SendMailnotification(_FileNames, _Count);
-                        } 
+                        }
+                        CostModelLogger.InfoLogger("====================================================================");
                     }
                     catch (Exception ex)
                     {
@@ -132,8 +140,8 @@ namespace CostModelDataStream.StreamEngine
                         Marshal.ReleaseComObject(xlWorkbook);
                         xlApp.Quit();
                         Marshal.ReleaseComObject(xlApp);
-                        Console.WriteLine(ex.Message);
-                        Console.ReadKey();
+                     //   Console.WriteLine(ex.Message);
+                      //  Console.ReadKey();
                       //  throw;
                     }
                                     
@@ -341,8 +349,13 @@ namespace CostModelDataStream.StreamEngine
         {
             //This filepath needs to be changed
             //string templatePath = Path.Combine(@"C:\VerserSourceCodeGitRepo\MCQFeedImport-new\MCQFeedImport\MailTemplate");
+
             string workingDirectory = Environment.CurrentDirectory;
             string templatePath = Path.Combine(Directory.GetParent(workingDirectory).Parent.FullName + @"\MailTemplate");
+
+          //  string templatePath = Path.Combine(@"C:\CostModelStreamer\MailTemplate\");
+
+
             if (templatePath != null && responsemodel != null)
             {
                 Dictionary<string, string> replacements = new Dictionary<string, string>();
